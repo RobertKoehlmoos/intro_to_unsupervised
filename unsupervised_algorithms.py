@@ -17,9 +17,9 @@ def randomized_hill_climbing(fit, get_random, get_neighbors, iterations=1):
         cur = get_random()
         neighbors = get_neighbors(cur)
         # This is where the climbing happens
-        while fit(best_neigh := max(neighbors, fit)) > fit(cur):
+        while fit(best_neigh := max(neighbors, key=fit)) > fit(cur):
             cur = best_neigh
-        best = max(best, cur, fit)
+        best = max(best, cur, key=fit)
     return fit(best)
 
 
@@ -44,11 +44,11 @@ def simulated_annealing(fit, get_random, get_neighbor, init_temp=10, min_temp=0.
         cur = get_random()
         temp = init_temp
         while temp > min_temp:
-            neighbor = get_neighbor(cur)
-            if fit(neighbor) > fit(cur):
+            neighbor = random.choice(get_neighbor(cur))
+            if fit(neighbor) >= fit(cur):
                 cur = neighbor
             # The temperature based comparison for negative movement
-            elif math.exp(fit(cur) - fit(neighbor) / temp) > random.random():
+            elif math.exp((fit(cur) - fit(neighbor)) / temp) > random.random():
                 cur = neighbor
             if fit(cur) > fit(best):
                 best = cur
@@ -71,8 +71,10 @@ def genetic_algorithm(fit, get_random, mate, is_converged, pop_size=10, iteratio
     best = get_random()
     for _ in range(iterations):
         pop = [get_random() for _ in range(pop_size)]
+        cycles = 0
         while not is_converged(pop):
-            top_half = pop.sort(fit)[:len(pop)/2]
+            top_half = sorted(pop, key=fit)[:pop_size//2]
             pop = [mate(random.choice(top_half), random.choice(top_half)) for _ in range(pop_size)]
-        best = max(best, fit(random.choice(pop)))
+            cycles += 1
+        best = max(best, random.choice(pop), key=fit)
     return fit(best)

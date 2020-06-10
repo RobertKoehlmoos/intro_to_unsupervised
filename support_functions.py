@@ -29,9 +29,9 @@ def increasing_hills(x):
     # x: a bit string
     # As output, the function produces an integer
     # This fitness function goes through a cosine cycle every 20 ticks
-    # Getting bigger as x gets bigger
+    # Getting bigger as x gets bigger, but slowly
     i = int(x, 2)
-    return int(i*math.cos(math.pi*i/10))
+    return int(math.log(i, 2)*math.cos(math.pi*i/10))
 
 
 def jagged_hills(x):
@@ -39,7 +39,8 @@ def jagged_hills(x):
     # basic hills
     # x: a bit string
     i = int(x, 2)
-    return int(i*math.cos(math.pi*i/10)) + (i % 7)
+    return int(math.log(i, 2)*math.cos(math.pi*i/10))/10 + (i % 7)
+
 
 def bit_flips(x):
     # fitness function
@@ -60,8 +61,19 @@ def mate_string(x, y):
     assert len(x) == len(y)
     return ''.join([random.choice((x[i], y[i])) for i in range(len(x))])
 
+
 def population_converged(pop):
     # Takes as input a list of string values
     # pop: A list of bit strings of equal length
     # Returns a boolean if the population is sufficiently close
     # to count as converged
+    diffs = 0
+    pop_size = len(pop)
+    length = len(pop[0])
+    for i in range(pop_size):
+        for j in range(i, pop_size):
+            diffs += sum([pop[i][k] != pop[j][k] for k in range(length-1)])
+    # If, on average, 10% of bits are different between any two values
+    # Then the population is not yet converged
+    # This criteria for population convergence was chosen semi-arbitrarily
+    return ((diffs / length) / (pop_size**2)) < 0.1
